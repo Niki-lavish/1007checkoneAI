@@ -1,15 +1,16 @@
 <template>
   <v-card class="pa-4" flat>
-    <v-list dense nav>
+    <v-list nav dense>
+      <v-list-subheader class="list-title">分類</v-list-subheader>
       <v-list-item
         v-for="item in categories"
         :key="item.title"
         link
-        :class="{ 'v-list-item--active': item.title === '所有商品' }"
+        rounded="lg"
+        class="category-item"
+        :class="{ 'active-category': modelValue === item.title }"
+        @click="$emit('update:modelValue', item.title)"
       >
-        <template v-slot:prepend>
-          <v-icon>{{ item.icon }}</v-icon>
-        </template>
         <v-list-item-title>{{ item.title }}</v-list-item-title>
       </v-list-item>
     </v-list>
@@ -19,18 +20,45 @@
 <script setup>
 import { ref } from 'vue';
 
+defineProps({
+  modelValue: {
+    type: String,
+    default: '特色風味小火鍋'
+  }
+});
+
+defineEmits(['update:modelValue']);
+
 const categories = ref([
-  { title: '所有商品', icon: 'mdi-all-inclusive' },
-  { title: '主食', icon: 'mdi-food' },
-  { title: '點心', icon: 'mdi-cake-variant' },
-  { title: '飲品', icon: 'mdi-coffee' },
+  { title: '特色風味小火鍋' },
+  { title: '特色風味簡餐' },
+  { title: '單品咖啡' },
+  { title: '義式咖啡' },
+  { title: '茶' },
+  { title: '無咖啡因飲品' },
+  { title: '甜點' },
+  { title: '炸物' },
 ]);
 </script>
 
 <style scoped>
-.v-list-item--active {
-  background-color: #F5F5F5;
-  color: #222222;
-  border-radius: 4px;
+.list-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: black;
+  margin-bottom: 0.5rem;
+  padding-inline-start: 16px;
+}
+
+.category-item {
+  margin-bottom: 8px; /* Spacing between items */
+}
+
+.active-category {
+  background-color: #FF6A3D;
+}
+
+.active-category .v-list-item-title {
+  color: white;
 }
 </style>

@@ -1,58 +1,54 @@
 <template>
   <v-card class="d-flex flex-column pa-4" flat height="100%">
     <v-card-title class="text-h5 font-weight-bold">
-      購物車
+      我的購物車
     </v-card-title>
 
     <v-card-text v-if="cartItems.length === 0" class="text-center flex-grow-1 d-flex flex-column justify-center align-center">
-      <v-icon size="64" color="grey-lighten-1">mdi-cart-outline</v-icon>
-      <p class="mt-4 text-grey-darken-1">您的購物車是空的</p>
+      <p class="mt-4 text-grey-darken-1">購物車是空的</p>
     </v-card-text>
 
-    <v-list v-else class="flex-grow-1 overflow-y-auto">
-      <v-list-item
-        v-for="item in cartItems"
-        :key="item.id"
-        class="mb-2"
-      >
-        <template v-slot:prepend>
-            <v-img :src="item.image" width="64" class="mr-4 rounded"></v-img>
-        </template>
-
-        <v-list-item-title class="font-weight-bold">{{ item.name }}</v-list-item-title>
-        
-        <v-list-item-subtitle>
-          <div class="d-flex align-center mt-1">
-            <span class="mr-auto">${{ item.price }}</span>
-            <div class="d-flex align-center">
-              <v-btn icon size="x-small" variant="tonal" @click="updateQuantity(item, item.quantity - 1)">
-                <v-icon>mdi-minus</v-icon>
-              </v-btn>
-              <span class="mx-3">{{ item.quantity }}</span>
-              <v-btn icon size="x-small" variant="tonal" @click="updateQuantity(item, item.quantity + 1)">
-                <v-icon>mdi-plus</v-icon>
-              </v-btn>
+    <v-list v-else class="flex-grow-1 overflow-y-auto" lines="three">
+      <template v-for="(item, index) in cartItems" :key="item.id">
+        <v-list-item class="mb-2">
+          <div class="d-flex align-center">
+            <v-img :src="item.image" width="80" height="80" cover class="mr-4 rounded-lg"></v-img>
+            <div class="flex-grow-1">
+              <v-list-item-title class="font-weight-bold">{{ item.name }}</v-list-item-title>
+              <v-list-item-subtitle v-if="item.description" class="text-grey-darken-1 my-1">{{ item.description }}</v-list-item-subtitle>
+              <div class="d-flex align-center justify-space-between">
+                 <div class="font-weight-bold">NT${{ item.price }}</div>
+                <div class="d-flex align-center">
+                  <v-btn variant="text" icon="mdi-minus" size="x-small" @click="updateQuantity(item, item.quantity - 1)"></v-btn>
+                  <span class="px-2">{{ item.quantity }}</span>
+                  <v-btn variant="text" icon="mdi-plus" size="x-small" @click="updateQuantity(item, item.quantity + 1)"></v-btn>
+                </div>
+              </div>
             </div>
+            <v-btn variant="text" icon="mdi-close" size="small" @click="removeItem(item)" class="ml-2 align-self-start"></v-btn>
           </div>
-        </v-list-item-subtitle>
-
-        <template v-slot:append>
-          <v-btn icon size="small" variant="text" @click="removeItem(item)">
-            <v-icon color="error">mdi-delete-outline</v-icon>
-          </v-btn>
-        </template>
-      </v-list-item>
+        </v-list-item>
+        <v-divider v-if="index < cartItems.length - 1"></v-divider>
+      </template>
     </v-list>
 
     <div class="mt-auto">
-      <v-divider class="my-4"></v-divider>
-
-      <div class="d-flex justify-space-between align-center mb-4">
-        <span class="text-h6">總計:</span>
-        <span class="text-h6 font-weight-bold">${{ totalPrice }}</span>
+      <div class="d-flex justify-space-between align-center mt-4">
+        <span>小計:</span>
+        <span class="font-weight-bold">NT${{ totalPrice }}</span>
       </div>
 
-      <v-btn block color="primary" size="large" :disabled="cartItems.length === 0">
+      <div class="my-4 text-center">
+        <p class="promo-text">🎉 全品項85折優惠實施中!</p>
+        <p class="promo-text">滿500元再送炸物拼盤一份!</p>
+      </div>
+
+      <div class="d-flex justify-space-between align-center mb-4">
+        <span class="text-h5">總計:</span>
+        <span class="text-h5 font-weight-bold">NT${{ totalPrice }}</span>
+      </div>
+
+      <v-btn block color="#FF8C69" size="large" class="checkout-btn" :disabled="cartItems.length === 0">
         前往結帳
       </v-btn>
     </div>
@@ -74,7 +70,11 @@ defineProps({
 const emit = defineEmits(['update-quantity', 'remove-item']);
 
 const updateQuantity = (item, quantity) => {
-  emit('update-quantity', { item, quantity });
+  if (quantity <= 0) {
+    removeItem(item);
+  } else {
+    emit('update-quantity', { item, quantity });
+  }
 };
 
 const removeItem = (item) => {
@@ -83,7 +83,13 @@ const removeItem = (item) => {
 </script>
 
 <style scoped>
-.rounded {
-  border-radius: 8px;
+.promo-text {
+  color: #FF6A3D;
+  font-size: 0.9rem;
+  margin: 4px 0;
+}
+
+.checkout-btn {
+  color: white !important;
 }
 </style>

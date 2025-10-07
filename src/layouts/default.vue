@@ -2,34 +2,13 @@
   <v-app>
     <Navbar 
       :cart-item-count="cartItems.length"
-      @toggle-navigation="drawer = !drawer" 
-      @toggle-cart="cartDrawer = !cartDrawer"
     />
 
-    <v-navigation-drawer
-      v-model="drawer"
-      :rail="rail"
-      permanent
-      @click="rail = false"
-    >
-      <v-list-item
-        prepend-avatar="https://randomuser.me/api/portraits/men/85.jpg"
-        title="John Leider"
-        nav
-      >
-        <template v-slot:append>
-          <v-btn
-            variant="text"
-            icon="mdi-chevron-left"
-            @click.stop="rail = !rail"
-          ></v-btn>
-        </template>
-      </v-list-item>
-      <v-divider></v-divider>
-      <CategoryMenu />
+    <v-navigation-drawer permanent>
+      <CategoryMenu v-model="selectedCategory" />
     </v-navigation-drawer>
     
-    <v-navigation-drawer v-model="cartDrawer" location="right" temporary width="400">
+    <v-navigation-drawer location="right" permanent width="320">
       <ShoppingCart 
         :cart-items="cartItems"
         :total-price="totalPrice"
@@ -46,17 +25,12 @@
 
 <script setup>
 import { ref, computed, provide } from 'vue';
-import { useDisplay } from 'vuetify';
 import Navbar from './default/navbar.vue';
 import CategoryMenu from '@/components/CategoryMenu.vue';
 import ShoppingCart from '@/components/ShoppingCart.vue';
 
-const { mobile } = useDisplay();
-const drawer = ref(!mobile.value);
-const cartDrawer = ref(false);
-const rail = ref(false);
-
 const cartItems = ref([]);
+const selectedCategory = ref('特色風味小火鍋');
 
 const totalPrice = computed(() => {
   return cartItems.value.reduce((total, item) => total + item.price * item.quantity, 0);
@@ -69,7 +43,6 @@ const addToCart = (product) => {
   } else {
     cartItems.value.push({ ...product, quantity: 1 });
   }
-  cartDrawer.value = true;
 };
 
 const updateQuantity = ({ item, quantity }) => {
@@ -91,4 +64,6 @@ const removeItem = (item) => {
 };
 
 provide('addToCart', addToCart);
+provide('selectedCategory', selectedCategory);
+
 </script>

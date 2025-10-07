@@ -2,60 +2,203 @@
   <v-container fluid>
     <v-row>
       <v-col
-        v-for="product in products"
+        v-for="product in filteredProducts"
         :key="product.id"
         cols="12"
         sm="6"
         md="4"
         lg="3"
       >
-        <ProductCard :product="product" @add-to-cart="addToCart" />
+        <ProductCard :product="product" @show-options="showOptionsModal" />
       </v-col>
     </v-row>
+    <ProductOptionsModal 
+      :is-open="isOptionsModalOpen"
+      :product="selectedProduct"
+      :all-products="allProducts"
+      @update:is-open="isOptionsModalOpen = $event"
+      @add-to-cart="handleAddToCart"
+    />
   </v-container>
 </template>
 
 <script setup>
-import { ref, inject } from 'vue';
+import { ref, inject, computed } from 'vue';
 import ProductCard from '@/components/ProductCard.vue';
+import ProductOptionsModal from '@/components/ProductOptionsModal.vue';
 
-const addToCart = inject('addToCart');
+const injectedAddToCart = inject('addToCart');
+const selectedCategory = inject('selectedCategory');
 
-const products = ref([
+const isOptionsModalOpen = ref(false);
+const selectedProduct = ref(null);
+
+const showOptionsModal = (product) => {
+  selectedProduct.value = product;
+  isOptionsModalOpen.value = true;
+};
+
+const handleAddToCart = (product) => {
+  injectedAddToCart(product);
+  isOptionsModalOpen.value = false;
+}
+
+const allProducts = ref([
   {
-    id: 1,
-    name: '濃縮咖啡',
-    description: '純粹的咖啡風味',
-    price: 80,
-    image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    "id": 10,
+    "name": "蕃茄牛奶鍋",
+    "description": "濃郁番茄與香醇牛奶的完美結合",
+    "price": 400,
+    "image": "/images/product-10.jpg",
+    "category": "特色風味小火鍋"
   },
   {
-    id: 2,
-    name: '拿鐵',
-    description: '咖啡與牛奶的完美結合',
-    price: 120,
-    image: 'https://plus.unsplash.com/premium_photo-1675435432312-32c589574591?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    "id": 11,
+    "name": "泰式酸辣鍋",
+    "description": "道地的泰式酸辣風味，開胃首選",
+    "price": 380,
+    "image": "/images/product-11.jpg",
+    "category": "特色風味小火鍋"
   },
   {
-    id: 3,
-    name: '卡布奇諾',
-    description: '奶泡、牛奶與咖啡的經典組合',
-    price: 120,
-    image: 'https://images.unsplash.com/photo-1517256064527-09c73fc73e38?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    "id": 12,
+    "name": "香煎雞腿排",
+    "description": "附白飯、湯、小菜",
+    "price": 280,
+    "image": "/images/product-12.jpg",
+    "category": "特色風味簡餐"
   },
   {
-    id: 4,
-    name: '可頌',
-    description: '外酥內軟的法式經典',
-    price: 60,
-    image: 'https://images.unsplash.com/photo-1587668178277-2952e7f90c21?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    "id": 13,
+    "name": "鹽烤鯖魚",
+    "description": "附白飯、湯、小菜",
+    "price": 260,
+    "image": "/images/product-13.jpg",
+    "category": "特色風味簡餐"
   },
   {
-    id: 5,
-    name: '提拉米蘇',
-    description: '帶有咖啡酒香的義式甜點',
-    price: 100,
-    image: 'https://images.unsplash.com/photo-1571877232231-c27ee531e208?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    "id": 1,
+    "name": "耶加雪菲",
+    "description": "柑橘、花香、檸檬",
+    "price": 180,
+    "image": "/images/product-1.jpg",
+    "category": "單品咖啡"
   },
+  {
+    "id": 2,
+    "name": "肯亞AA",
+    "description": "莓果、烏梅、黑醋栗",
+    "price": 200,
+    "image": "/images/product-2.jpg",
+    "category": "單品咖啡"
+  },
+  {
+    "id": 3,
+    "name": "曼特寧",
+    "description": "藥草、奶油、巧克力",
+    "price": 160,
+    "image": "/images/product-3.jpg",
+    "category": "單品咖啡"
+  },
+  {
+    "id": 4,
+    "name": "拿鐵",
+    "description": "濃縮咖啡與蒸氣牛奶",
+    "price": 120,
+    "image": "/images/product-4.jpg",
+    "category": "義式咖啡"
+  },
+  {
+    "id": 5,
+    "name": "卡布奇諾",
+    "description": "濃縮咖啡、蒸氣牛奶與奶泡",
+    "price": 120,
+    "image": "/images/product-5.jpg",
+    "category": "義式咖啡"
+  },
+  {
+    "id": 6,
+    "name": "美式咖啡",
+    "description": "濃縮咖啡加熱水",
+    "price": 90,
+    "image": "/images/product-6.jpg",
+    "category": "義式咖啡"
+  },
+  {
+    "id": 14,
+    "name": "日月潭紅茶",
+    "description": "台灣特色紅茶",
+    "price": 80,
+    "image": "/images/product-14.jpg",
+    "category": "茶"
+  },
+  {
+    "id": 15,
+    "name": "文山包種茶",
+    "description": "清香甘醇",
+    "price": 90,
+    "image": "/images/product-15.jpg",
+    "category": "茶"
+  },
+  {
+    "id": 16,
+    "name": "新鮮水果茶",
+    "description": "多種新鮮水果調製",
+    "price": 130,
+    "image": "/images/product-16.jpg",
+    "category": "無咖啡因飲品"
+  },
+  {
+    "id": 17,
+    "name": "蜂蜜檸檬",
+    "description": "天然蜂蜜搭配新鮮檸檬",
+    "price": 100,
+    "image": "/images/product-17.jpg",
+    "category": "無咖啡因飲品"
+  },
+  {
+    "id": 7,
+    "name": "提拉米蘇",
+    "description": "馬斯卡彭起司、咖啡、手指餅乾",
+    "price": 150,
+    "image": "/images/product-7.jpg",
+    "category": "甜點"
+  },
+  {
+    "id": 8,
+    "name": "紐約起司蛋糕",
+    "description": "濃郁的奶油起司風味",
+    "price": 130,
+    "image": "/images/product-8.jpg",
+    "category": "甜點"
+  },
+  {
+    "id": 9,
+    "name": "法式檸檬塔",
+    "description": "酸甜清新的檸檬內餡",
+    "price": 110,
+    "image": "/images/product-9.jpg",
+    "category": "甜點"
+  },
+  {
+    "id": 18,
+    "name": "美式脆薯",
+    "description": "金黃酥脆",
+    "price": 90,
+    "image": "/images/product-18.jpg",
+    "category": "炸物"
+  },
+  {
+    "id": 19,
+    "name": "唐揚雞塊",
+    "description": "日式風味炸雞",
+    "price": 120,
+    "image": "/images/product-19.jpg",
+    "category": "炸物"
+  }
 ]);
+
+const filteredProducts = computed(() => {
+  return allProducts.value.filter(p => p.category === selectedCategory.value);
+});
 </script>
