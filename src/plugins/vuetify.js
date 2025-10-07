@@ -6,9 +6,14 @@ import '@mdi/font/css/materialdesignicons.css'; // Ensure you are using css-load
 const lightTheme = {
   dark: false,
   colors: {
-    primary: '#ffb58a',
-    secondary: '#fa320f',
-    background: '#fff',
+    primary: '#FF6A3D',
+    secondary: '#222222',
+    accent: '#6B7280',
+    error: '#FF5252',
+    info: '#2196F3',
+    success: '#4CAF50',
+    warning: '#FFC107',
+    background: '#FFFFFF',
   }
 }
 
