@@ -1,6 +1,6 @@
 <template>
   <v-dialog :model-value="isOpen" @update:model-value="close" max-width="500px">
-    <v-card>
+    <v-card style="border-radius: 32px;">
       <v-card-title class="text-h5 font-weight-bold d-flex justify-space-between">
         <span>{{ product.name }} - 套餐選項</span>
         <v-btn icon @click="close" variant="text">
@@ -12,7 +12,7 @@
         
         <h3 class="text-h6 font-weight-bold mb-2">飲料選擇</h3>
         <v-radio-group v-model="drinkOption">
-          <v-radio value="default">
+          <v-radio value="default" color="#FF6A3D">
             <template v-slot:label>
               <div>選擇附餐飲料 (免費)</div>
             </template>
@@ -26,7 +26,7 @@
             class="ml-8 mt-2"
             hide-details
           ></v-select>
-          <v-radio value="custom" class="mt-2">
+          <v-radio value="custom" class="mt-2" color="#FF6A3D">
             <template v-slot:label>
               <div>更換其他飲品 (折抵 NT$60)</div>
             </template>

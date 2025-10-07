@@ -1,17 +1,13 @@
 <template>
   <v-container fluid>
-    <v-row>
-      <v-col
+    <div class="product-grid">
+      <ProductCard
         v-for="product in filteredProducts"
         :key="product.id"
-        cols="12"
-        sm="6"
-        md="4"
-        lg="3"
-      >
-        <ProductCard :product="product" @show-options="showOptionsModal" />
-      </v-col>
-    </v-row>
+        :product="product"
+        @show-options="showOptionsModal"
+      />
+    </div>
     <ProductOptionsModal 
       :is-open="isOptionsModalOpen"
       :product="selectedProduct"
@@ -202,3 +198,12 @@ const filteredProducts = computed(() => {
   return allProducts.value.filter(p => p.category === selectedCategory.value);
 });
 </script>
+
+<style scoped>
+.product-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px; /* Provides spacing between cards */
+  justify-content: flex-start; /* Aligns the cards to the left */
+}
+</style>
