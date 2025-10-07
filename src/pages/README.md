@@ -13,3 +13,8 @@
   **原因**：移除側邊欄元件，並改用 `inject` 獲取 `addToCart` 函數，專注於商品展示。
   **影響檔案**：`src/pages/index.vue`
   **驗證**：終端機成功
+- [建立][v2.1]
+  **動作**：建立 `SeatMap.vue` 頁面。
+  **原因**：根據 `blueprint.md` 任務 1，建立座位總覽頁面的主體檔案。
+  **影響檔案**：`src/pages/SeatMap.vue`
+  **驗證**：終端機成功

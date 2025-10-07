@@ -8,3 +8,8 @@
   **原因**：根據 `GEMINI畫面分析.md` 的佈局要求，設定頁面的基本結構。
   **影響檔案**：`src/layouts/default.vue`, `src/layouts/default/navbar.vue`
   **驗證**：終端機成功
+- [新增][v2.3]
+  **動作**：為後台頁面建立專屬的 `admin` 佈局。
+  **原因**：根據 `blueprint.md` 任務 3，移除「定位總覽」頁面的側邊欄，使其具備獨立的管理介面外觀。
+  **影響檔案**：`src/layouts/admin.vue`
+  **驗證**：終端機成功

@@ -19,6 +19,17 @@ const routes = [
       },
     ],
   },
+  {
+    path: '/seat-map',
+    component: () => import('@/layouts/admin.vue'),
+    children: [
+      {
+        path: '',
+        name: 'SeatMap',
+        component: () => import('@/pages/SeatMap.vue'),
+      },
+    ],
+  },
 ];
 
 const router = createRouter({

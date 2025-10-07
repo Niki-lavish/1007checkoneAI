@@ -13,3 +13,13 @@
   **原因**：將 `CategoryMenu` 和 `ShoppingCart` 移至 `default.vue`，並使用 `v-navigation-drawer` 實現響應式行為，符合 `GEMINI畫面分析.md` 的 RWD 設計。
   **影響檔案**：`src/layouts/default.vue`, `src/layouts/default/navbar.vue`
   **驗證**：終端機成功
+- [修改][v2.1]
+  **動作**：更新導覽列「定位總覽」按鈕的連結。
+  **原因**：根據 `blueprint.md` 任務 1，將按鈕的 `to` 屬性指向新建的 `/seat-map` 路由。
+  **影響檔案**：`src/layouts/default/navbar.vue`
+  **驗證**：終端機成功
+- [修改][v2.2]
+  **動作**：新增「返回點餐」按鈕。
+  **原因**：根據 `blueprint.md` 任務 2，在導覽列新增一個按鈕，方便使用者返回點餐頁面。
+  **影響檔案**：`src/layouts/default/navbar.vue`
+  **驗證**：終端機成功

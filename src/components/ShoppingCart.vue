@@ -15,7 +15,7 @@
             <v-img :src="item.image" width="80" height="80" cover class="mr-4 rounded-lg"></v-img>
             <div class="flex-grow-1">
               <v-list-item-title class="font-weight-bold">{{ item.name }}</v-list-item-title>
-              <v-list-item-subtitle v-if="item.description" class="text-grey-darken-1 my-1">{{ item.description }}</v-list-item-subtitle>
+              <v-list-item-subtitle v-if="item.description" :class="['my-1', getDescriptionClass(item)]">{{ item.description }}</v-list-item-subtitle>
               <div class="d-flex align-center justify-space-between">
                  <div class="font-weight-bold">NT${{ item.price }}</div>
                 <div class="d-flex align-center">
@@ -48,14 +48,18 @@
         <span class="text-h5 font-weight-bold">NT${{ totalPrice }}</span>
       </div>
 
-      <v-btn block color="#FF8C69" size="large" class="checkout-btn" :disabled="cartItems.length === 0">
+      <v-btn block color="#FF8C69" size="large" class="checkout-btn" :disabled="cartItems.length === 0" @click="isCheckoutModalOpen = true">
         前往結帳
       </v-btn>
     </div>
+    <CheckoutModal :is-open="isCheckoutModalOpen" @update:is-open="isCheckoutModalOpen = $event" />
   </v-card>
 </template>
 
 <script setup>
+import { ref } from 'vue';
+import CheckoutModal from '@/components/CheckoutModal.vue';
+
 defineProps({
   cartItems: {
     type: Array,
@@ -67,7 +71,18 @@ defineProps({
   }
 });
 
+const isCheckoutModalOpen = ref(false);
 const emit = defineEmits(['update-quantity', 'remove-item']);
+
+const getDescriptionClass = (item) => {
+  if (item.category === '特色風味簡餐') {
+    return 'meal-set-text';
+  }
+  if (['甜點', '炸物'].includes(item.category)) {
+    return 'addon-text';
+  }
+  return 'text-grey-darken-1';
+};
 
 const updateQuantity = (item, quantity) => {
   if (quantity <= 0) {
@@ -91,5 +106,13 @@ const removeItem = (item) => {
 
 .checkout-btn {
   color: white !important;
+}
+
+.meal-set-text {
+  color: green !important;
+}
+
+.addon-text {
+  color: orange !important;
 }
 </style>

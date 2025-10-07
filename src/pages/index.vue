@@ -30,8 +30,12 @@ const isOptionsModalOpen = ref(false);
 const selectedProduct = ref(null);
 
 const showOptionsModal = (product) => {
-  selectedProduct.value = product;
-  isOptionsModalOpen.value = true;
+  if (product.category === '特色風味小火鍋' || product.category === '特色風味簡餐') {
+    selectedProduct.value = product;
+    isOptionsModalOpen.value = true;
+  } else {
+    injectedAddToCart(product);
+  }
 };
 
 const handleAddToCart = (product) => {
