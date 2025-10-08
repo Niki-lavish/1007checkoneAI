@@ -39,7 +39,7 @@
                 <v-text-field label="搜尋姓名/電話/桌號" hide-details></v-text-field>
               </v-col>
               <v-col cols="4">
-                <v-btn color="primary" @click="dialog = true">新增訂位</v-btn>
+                <v-btn color="primary" @click="openReservationDialog">新增訂位</v-btn>
               </v-col>
             </v-row>
             <v-list class="mt-4" bg-color="transparent">
@@ -82,27 +82,75 @@
     </v-row>
 
     <!-- Add Reservation Dialog -->
-    <v-dialog v-model="dialog" max-width="500px">
+    <v-dialog v-model="dialog" max-width="500px" persistent>
       <v-card>
         <v-card-title class="d-flex justify-space-between align-center">
           <span class="headline">新增訂位</span>
-          <v-btn icon @click="dialog = false"><v-icon>mdi-close</v-icon></v-btn>
+          <v-btn icon @click="closeReservationDialog"><v-icon>mdi-close</v-icon></v-btn>
         </v-card-title>
         <v-card-text>
-          <v-container>
-            <v-row>
-              <v-col cols="12" sm="6"><v-text-field label="姓名" v-model="newReservation.name"></v-text-field></v-col>
-              <v-col cols="12" sm="6"><v-text-field label="電話" v-model="newReservation.phone"></v-text-field></v-col>
-              <v-col cols="12" sm="6"><v-text-field label="時間" v-model="newReservation.time"></v-text-field></v-col>
-              <v-col cols="12" sm="6"><v-select :items="tableNames" label="桌號" v-model="newReservation.table"></v-select></v-col>
-              <v-col cols="12" sm="6"><v-text-field label="大人" type="number" v-model.number="newReservation.adults"></v-text-field></v-col>
-              <v-col cols="12" sm="6"><v-text-field label="小孩" type="number" v-model.number="newReservation.children"></v-text-field></v-col>
-            </v-row>
-          </v-container>
+          <v-form ref="reservationForm">
+            <v-container>
+              <v-row>
+                <v-col cols="12" sm="6">
+                  <div class="text-subtitle-1 font-weight-medium mb-2">姓名</div>
+                  <v-text-field v-model="newReservation.name" variant="outlined" density="compact" placeholder="請輸入姓名"></v-text-field>
+                </v-col>
+                <v-col cols="12" sm="6">
+                  <div class="text-subtitle-1 font-weight-medium mb-2">電話</div>
+                  <v-text-field
+                    v-model="phoneProxy"
+                    :rules="phoneRules"
+                    variant="outlined"
+                    density="compact"
+                    placeholder="請輸入 09 開頭的電話號碼"
+                    counter
+                    type="tel"
+                    maxlength="10"
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="12" sm="6">
+                  <div class="text-subtitle-1 font-weight-medium mb-2">時間</div>
+                  <v-row dense>
+                    <v-col cols="6">
+                      <v-select
+                        :items="hourSlots"
+                        v-model="newReservation.hour"
+                        variant="outlined"
+                        density="compact"
+                        placeholder="小時"
+                      ></v-select>
+                    </v-col>
+                    <v-col cols="6">
+                      <v-select
+                        :items="minuteSlots"
+                        v-model="newReservation.minute"
+                        variant="outlined"
+                        density="compact"
+                        placeholder="分鐘"
+                      ></v-select>
+                    </v-col>
+                  </v-row>
+                </v-col>
+                <v-col cols="12" sm="6">
+                  <div class="text-subtitle-1 font-weight-medium mb-2">桌號</div>
+                  <v-select :items="tableNames" v-model="newReservation.table" variant="outlined" density="compact" placeholder="請選擇桌號"></v-select>
+                </v-col>
+                <v-col cols="12" sm="6">
+                  <div class="text-subtitle-1 font-weight-medium mb-2">大人</div>
+                  <v-text-field type="number" v-model.number="newReservation.adults" variant="outlined" density="compact" placeholder="請輸入人數"></v-text-field>
+                </v-col>
+                <v-col cols="12" sm="6">
+                  <div class="text-subtitle-1 font-weight-medium mb-2">小孩</div>
+                  <v-text-field type="number" v-model.number="newReservation.children" variant="outlined" density="compact" placeholder="請輸入人數"></v-text-field>
+                </v-col>
+              </v-row>
+            </v-container>
+          </v-form>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn text @click="dialog = false">取消</v-btn>
+          <v-btn text @click="closeReservationDialog">取消</v-btn>
           <v-btn color="primary" @click="saveReservation">儲存</v-btn>
         </v-card-actions>
       </v-card>
@@ -138,6 +186,64 @@
       </v-card>
     </v-dialog>
 
+    <!-- Delete Floor Confirmation Dialog -->
+    <v-dialog v-model="deleteFloorConfirmDialog" max-width="400px">
+      <v-card>
+        <v-card-title class="headline">確認刪除</v-card-title>
+        <v-card-text>
+          確定要刪除「{{ currentFloor ? currentFloor.name : '' }}」樓層嗎？此動作無法復原。
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text @click="deleteFloorConfirmDialog = false">取消</v-btn>
+          <v-btn color="error" text @click="executeDeleteFloor">刪除</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    
+    <!-- Delete Table Confirmation Dialog -->
+    <v-dialog v-model="deleteTableConfirmDialog" max-width="400px">
+      <v-card>
+        <v-card-title class="headline">確認刪除</v-card-title>
+        <v-card-text>
+          確定要刪除「{{ tableToDelete ? tableToDelete.name : '' }}」桌位嗎？此動作無法復原。
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text @click="cancelDeleteTable">取消</v-btn>
+          <v-btn color="error" text @click="executeDeleteTable">刪除</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Minimum Floor Warning Dialog -->
+    <v-dialog v-model="minFloorWarningDialog" max-width="400px">
+      <v-card>
+        <v-card-title class="headline">無法刪除</v-card-title>
+        <v-card-text>
+          至少需要保留一個樓層。
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" text @click="minFloorWarningDialog = false">確認</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Duplicate Table Name Warning Dialog -->
+    <v-dialog v-model="duplicateNameWarningDialog" max-width="400px">
+      <v-card>
+        <v-card-title class="headline">名稱重複</v-card-title>
+        <v-card-text>
+          已有相同的桌號存在，請使用其他名稱。
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" text @click="duplicateNameWarningDialog = false">確認</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
   </v-container>
 </template>
 
@@ -155,6 +261,10 @@ export default {
       dialog: false,
       editTableDialog: false,
       editFloorDialog: false,
+      deleteFloorConfirmDialog: false,
+      deleteTableConfirmDialog: false,
+      minFloorWarningDialog: false,
+      duplicateNameWarningDialog: false,
       date: new Date(),
       reservations: [],
       editMode: false,
@@ -185,10 +295,17 @@ export default {
           ],
         },
       ],
+      hourSlots: ['11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21'],
+      minuteSlots: ['00', '10', '20', '30', '40', '50'],
+      phoneRules: [
+        v => !!v || '電話為必填欄位',
+        v => /^09\d{8}$/.test(v) || '格式不符，請輸入 09 開頭的 10 位數字',
+      ],
       newReservation: {
         name: '',
         phone: '',
-        time: '12:00',
+        hour: '12',
+        minute: '00',
         table: null,
         adults: 2,
         children: 0,
@@ -200,9 +317,19 @@ export default {
       editedTableName: '',
       editedFloor: null,
       editedFloorName: '',
+      tableToDelete: null,
     };
   },
   computed: {
+    phoneProxy: {
+      get() {
+        return this.newReservation.phone;
+      },
+      set(val) {
+        const digits = val.replace(/\D/g, '');
+        this.newReservation.phone = digits.slice(0, 10);
+      },
+    },
     currentFloor() {
       return this.floors.find(f => f.id === this.currentFloorId);
     },
@@ -216,14 +343,23 @@ export default {
       return `${year}年${month}月${day}日`;
     },
     filteredReservations() {
-      // This is a simplified filter. You might want to enhance it.
-      return this.reservations.sort((a, b) => a.time.localeCompare(b.time));
+      return this.reservations
+        .filter(reservation => reservation.date === this.formattedDate)
+        .sort((a, b) => a.time.localeCompare(b.time));
     },
     tableNames() {
       return this.tables.map(t => t.name);
     }
   },
   methods: {
+    openReservationDialog() {
+      this.dialog = true;
+    },
+    closeReservationDialog() {
+      this.dialog = false;
+      this.$refs.reservationForm.resetValidation();
+      this.newReservation = { name: '', phone: '', hour: '12', minute: '00', table: null, adults: 2, children: 0 };
+    },
     previousDay() {
       this.date.setDate(this.date.getDate() - 1);
       this.date = new Date(this.date);
@@ -232,10 +368,20 @@ export default {
       this.date.setDate(this.date.getDate() + 1);
       this.date = new Date(this.date);
     },
-    saveReservation() {
-      this.reservations.push({ ...this.newReservation, date: this.formattedDate });
-      this.newReservation = { name: '', phone: '', time: '12:00', table: null, adults: 2, children: 0 };
-      this.dialog = false;
+    async saveReservation() {
+      const { valid } = await this.$refs.reservationForm.validate();
+      if (valid) {
+        const reservationToSave = {
+          ...this.newReservation,
+          time: `${this.newReservation.hour}:${this.newReservation.minute}`,
+          date: this.formattedDate,
+        };
+        delete reservationToSave.hour;
+        delete reservationToSave.minute;
+
+        this.reservations.push(reservationToSave);
+        this.closeReservationDialog();
+      }
     },
     handleUpdateTablePosition({ tableId, x, y }) {
       const table = this.tables.find(t => t.id === tableId);
@@ -245,15 +391,26 @@ export default {
       }
     },
     addTable() {
+      if (!this.currentFloor) return;
+
+      let newName = `T${this.nextTableId}`;
+      let isDuplicate = this.floors.some(floor => floor.tables.some(table => table.name === newName));
+
+      while (isDuplicate) {
+        this.nextTableId++;
+        newName = `T${this.nextTableId}`;
+        isDuplicate = this.floors.some(floor => floor.tables.some(table => table.name === newName));
+      }
+
       const newTable = {
-        id: this.nextTableId++,
-        name: `T${this.nextTableId - 1}`,
+        id: this.nextTableId,
+        name: newName,
         x: 10,
         y: 10,
       };
-      if (this.currentFloor) {
-        this.currentFloor.tables.push(newTable);
-      }
+      
+      this.currentFloor.tables.push(newTable);
+      this.nextTableId++; // Ensure next ID is fresh
     },
     alignToGrid() {
       this.tables.forEach(table => {
@@ -267,22 +424,46 @@ export default {
       this.editTableDialog = true;
     },
     saveTableName() {
-      if (this.editedTable) {
-        this.editedTable.name = this.editedTableName;
+      if (!this.editedTable) return;
+
+      const newName = this.editedTableName.trim();
+      if (!newName) return; // Prevent saving empty names
+
+      // Check for duplicates across ALL floors, excluding the table being edited
+      const isDuplicate = this.floors.some(floor => 
+        floor.tables.some(table => 
+          table.id !== this.editedTable.id && table.name === newName
+        )
+      );
+
+      if (isDuplicate) {
+        this.duplicateNameWarningDialog = true;
+        return;
       }
+
+      this.editedTable.name = newName;
       this.editTableDialog = false;
       this.editedTable = null;
       this.editedTableName = '';
     },
     handleDeleteTable(tableId) {
-      if (confirm('確定要刪除這張桌子嗎？')) {
-        if (this.currentFloor) {
-          const index = this.currentFloor.tables.findIndex(t => t.id === tableId);
-          if (index !== -1) {
-            this.currentFloor.tables.splice(index, 1);
-          }
+      this.tableToDelete = this.tables.find(t => t.id === tableId);
+      if (this.tableToDelete) {
+        this.deleteTableConfirmDialog = true;
+      }
+    },
+    executeDeleteTable() {
+      if (this.currentFloor && this.tableToDelete) {
+        const index = this.currentFloor.tables.findIndex(t => t.id === this.tableToDelete.id);
+        if (index !== -1) {
+          this.currentFloor.tables.splice(index, 1);
         }
       }
+      this.cancelDeleteTable();
+    },
+    cancelDeleteTable() {
+      this.deleteTableConfirmDialog = false;
+      this.tableToDelete = null;
     },
     openEditFloorDialog(floor) {
       this.editedFloor = floor;
@@ -307,21 +488,21 @@ export default {
       this.currentFloorId = newFloorId;
     },
     deleteFloor() {
-      alert('座位地圖：已收到刪除事件！');
       if (this.floors.length <= 1) {
-        alert('座位地圖：至少要保留一個樓層');
+        this.minFloorWarningDialog = true;
         return;
       }
-      if (confirm(`確定要刪除「${this.currentFloor.name}」嗎？`)) {
-        alert('座位地圖：正在刪除樓層...');
-        const index = this.floors.findIndex(f => f.id === this.currentFloorId);
-        if (index !== -1) {
-          this.floors.splice(index, 1);
-          if (this.floors.length > 0) {
-            this.currentFloorId = this.floors[Math.max(0, index - 1)].id;
-          } else {
-            this.currentFloorId = null;
-          }
+      this.deleteFloorConfirmDialog = true;
+    },
+    executeDeleteFloor() {
+      this.deleteFloorConfirmDialog = false;
+      const index = this.floors.findIndex(f => f.id === this.currentFloorId);
+      if (index !== -1) {
+        this.floors.splice(index, 1);
+        if (this.floors.length > 0) {
+          this.currentFloorId = this.floors[Math.max(0, index - 1)].id;
+        } else {
+          this.currentFloorId = null;
         }
       }
     },
