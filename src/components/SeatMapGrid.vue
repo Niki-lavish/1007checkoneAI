@@ -17,6 +17,14 @@
         <v-card-text class="text-center">
           <div class="font-weight-bold">{{ table.name }}</div>
         </v-card-text>
+        <v-card-actions v-if="draggable" class="justify-center">
+          <v-btn icon size="small" @click.stop="$emit('edit-table', table)">
+            <v-icon>mdi-pencil</v-icon>
+          </v-btn>
+          <v-btn icon size="small" @click.stop="$emit('delete-table', table.id)">
+            <v-icon>mdi-delete</v-icon>
+          </v-btn>
+        </v-card-actions>
       </v-card>
     </v-card-text>
   </v-card>
@@ -34,6 +42,7 @@ export default {
       default: false,
     },
   },
+  emits: ['update-table-position', 'edit-table', 'delete-table'],
   data() {
     return {
       draggedTable: null,
@@ -85,8 +94,12 @@ export default {
   width: 90px;
   height: 90px;
   display: flex;
+  flex-direction: column; /* Arrange items vertically */
   align-items: center;
   justify-content: center;
   user-select: none; /* Prevent text selection while dragging */
+}
+.v-card-actions {
+  padding: 0;
 }
 </style>
