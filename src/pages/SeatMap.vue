@@ -36,8 +36,8 @@
           <v-card-text>
             <v-row align="center">
               <v-col cols="8">
-                <v-text-field 
-                  label="搜尋姓名/電話/桌號" 
+                <v-text-field
+                  label="搜尋姓名/電話/桌號"
                   hide-details
                   v-model="searchQuery"
                 ></v-text-field>
@@ -49,10 +49,10 @@
 
             <!-- Reservations List -->
             <v-list class="mt-4" bg-color="transparent" v-if="filteredReservations.length > 0">
-              <v-card 
-                class="mb-4" 
+              <v-card
+                class="mb-4"
                 variant="outlined"
-                v-for="reservation in filteredReservations" 
+                v-for="reservation in filteredReservations"
                 :key="reservation.id"
               >
                 <v-card-text class="pa-3">
@@ -67,7 +67,7 @@
                     </v-col>
                   </v-row>
                   <v-divider class="my-2"></v-divider>
-                  <v-row no-gutters align-center">
+                  <v-row no-gutters align="center">
                     <v-col cols="6">
                       <div class="text-h6 font-weight-bold"><v-icon>mdi-account-group-outline</v-icon> {{ reservation.adults + reservation.children }}</div>
                     </v-col>
@@ -91,9 +91,9 @@
 
       <!-- Seat Map Column -->
       <v-col cols="6">
-        <seat-map-grid 
-          :tables="tables" 
-          :draggable="editMode" 
+        <seat-map-grid
+          :tables="tables"
+          :draggable="editMode"
           @update-table-position="handleUpdateTablePosition"
           @edit-table="openEditTableDialog"
           @delete-table="handleDeleteTable"
@@ -102,7 +102,7 @@
 
       <!-- Control Panel Column -->
       <v-col cols="3">
-        <control-panel 
+        <control-panel
           v-model:edit-mode="editMode"
           @add-floor="addFloor"
           @delete-floor="deleteFloor"
