@@ -36,24 +36,55 @@
           <v-card-text>
             <v-row align="center">
               <v-col cols="8">
-                <v-text-field label="搜尋姓名/電話/桌號" hide-details></v-text-field>
+                <v-text-field 
+                  label="搜尋姓名/電話/桌號" 
+                  hide-details
+                  v-model="searchQuery"
+                ></v-text-field>
               </v-col>
               <v-col cols="4">
                 <v-btn color="primary" @click="openReservationDialog">新增訂位</v-btn>
               </v-col>
             </v-row>
-            <v-list class="mt-4" bg-color="transparent">
-              <v-card class="mb-4" color="grey-lighten-4" v-for="(reservation, index) in filteredReservations" :key="index">
-                <v-list-item>
-                  <v-list-item-content>
-                     <v-list-item-title class="headline">{{ reservation.name }}</v-list-item-title>
-                     <v-list-item-subtitle><v-icon size="small">mdi-phone</v-icon> {{ reservation.phone }}</v-list-item-subtitle>
-                     <v-list-item-subtitle><v-icon size="small">mdi-clock</v-icon> {{ reservation.time }}</v-list-item-subtitle>
-                     <v-chip color="red" text-color="white" size="small">桌號: {{ reservation.table }}</v-chip>
-                  </v-list-item-content>
-                </v-list-item>
+
+            <!-- Reservations List -->
+            <v-list class="mt-4" bg-color="transparent" v-if="filteredReservations.length > 0">
+              <v-card 
+                class="mb-4" 
+                variant="outlined"
+                v-for="reservation in filteredReservations" 
+                :key="reservation.id"
+              >
+                <v-card-text class="pa-3">
+                  <v-row no-gutters align="start">
+                    <v-col cols="6">
+                      <div class="text-h6 font-weight-bold">{{ reservation.name }}</div>
+                      <div class="text-body-2 text-grey-darken-1"><v-icon size="small">mdi-phone-outline</v-icon> {{ reservation.phone }}</div>
+                    </v-col>
+                    <v-col cols="6" class="text-right">
+                      <div class="text-h6"><v-icon size="small">mdi-clock-outline</v-icon> {{ reservation.time }}</div>
+                      <v-chip color="red-lighten-5" text-color="red-darken-4" size="small" class="mt-1 font-weight-bold">桌號: {{ reservation.table }}</v-chip>
+                    </v-col>
+                  </v-row>
+                  <v-divider class="my-2"></v-divider>
+                  <v-row no-gutters align-center">
+                    <v-col cols="6">
+                      <div class="text-h6 font-weight-bold"><v-icon>mdi-account-group-outline</v-icon> {{ reservation.adults + reservation.children }}</div>
+                    </v-col>
+                    <v-col cols="6" class="text-right">
+                      <v-btn icon="mdi-pencil-outline" variant="text" size="small" @click="openEditReservationDialog(reservation)"></v-btn>
+                      <v-btn icon="mdi-trash-can-outline" variant="text" size="small" color="error" @click="openDeleteReservationDialog(reservation)"></v-btn>
+                    </v-col>
+                  </v-row>
+                </v-card-text>
               </v-card>
             </v-list>
+
+            <!-- No Reservations Message -->
+            <v-alert v-else class="mt-4" type="info" variant="tonal">
+              今日尚無訂位
+            </v-alert>
+
           </v-card-text>
         </v-card>
       </v-col>
@@ -81,11 +112,11 @@
       </v-col>
     </v-row>
 
-    <!-- Add Reservation Dialog -->
+    <!-- Add/Edit Reservation Dialog -->
     <v-dialog v-model="dialog" max-width="500px" persistent>
       <v-card>
         <v-card-title class="d-flex justify-space-between align-center">
-          <span class="headline">新增訂位</span>
+          <span class="headline">{{ formTitle }}</span>
           <v-btn icon @click="closeReservationDialog"><v-icon>mdi-close</v-icon></v-btn>
         </v-card-title>
         <v-card-text>
@@ -152,6 +183,21 @@
           <v-spacer></v-spacer>
           <v-btn text @click="closeReservationDialog">取消</v-btn>
           <v-btn color="primary" @click="saveReservation">儲存</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Delete Reservation Confirmation Dialog -->
+    <v-dialog v-model="deleteReservationConfirmDialog" max-width="400px">
+      <v-card>
+        <v-card-title class="headline">確認刪除</v-card-title>
+        <v-card-text>
+          確定要刪除「{{ reservationToDelete ? reservationToDelete.name : '' }}」的訂位嗎？此動作無法復原。
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text @click="cancelDeleteReservation">取消</v-btn>
+          <v-btn color="error" text @click="executeDeleteReservation">刪除</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -263,11 +309,13 @@ export default {
       editFloorDialog: false,
       deleteFloorConfirmDialog: false,
       deleteTableConfirmDialog: false,
+      deleteReservationConfirmDialog: false,
       minFloorWarningDialog: false,
       duplicateNameWarningDialog: false,
       date: new Date(),
       reservations: [],
       editMode: false,
+      searchQuery: '',
       currentFloorId: '1F',
       floors: [
         {
@@ -302,6 +350,7 @@ export default {
         v => /^09\d{8}$/.test(v) || '格式不符，請輸入 09 開頭的 10 位數字',
       ],
       newReservation: {
+        id: null, // Add id for editing
         name: '',
         phone: '',
         hour: '12',
@@ -310,9 +359,12 @@ export default {
         adults: 2,
         children: 0,
       },
+      editedReservation: null,
+      reservationToDelete: null,
       gridSize: 100, // 90 (table width) + 10 (gap)
       nextTableId: 103, // Keep track of the next available table ID
       nextFloorId: 3, // Keep track of the next available floor ID
+      nextReservationId: 1, // Keep track of the next available reservation ID
       editedTable: null,
       editedTableName: '',
       editedFloor: null,
@@ -321,6 +373,9 @@ export default {
     };
   },
   computed: {
+    formTitle() {
+      return this.editedReservation ? '編輯訂位' : '新增訂位';
+    },
     phoneProxy: {
       get() {
         return this.newReservation.phone;
@@ -343,9 +398,21 @@ export default {
       return `${year}年${month}月${day}日`;
     },
     filteredReservations() {
-      return this.reservations
-        .filter(reservation => reservation.date === this.formattedDate)
-        .sort((a, b) => a.time.localeCompare(b.time));
+      const query = this.searchQuery.toLowerCase().trim();
+      const dateFiltered = this.reservations.filter(reservation => reservation.date === this.formattedDate);
+
+      if (!query) {
+        return dateFiltered.sort((a, b) => a.time.localeCompare(b.time));
+      }
+
+      const searchFiltered = dateFiltered.filter(reservation => {
+        const nameMatch = reservation.name.toLowerCase().includes(query);
+        const phoneMatch = reservation.phone.includes(query);
+        const tableMatch = reservation.table.toLowerCase().includes(query);
+        return nameMatch || phoneMatch || tableMatch;
+      });
+
+      return searchFiltered.sort((a, b) => a.time.localeCompare(b.time));
     },
     tableNames() {
       return this.tables.map(t => t.name);
@@ -353,12 +420,42 @@ export default {
   },
   methods: {
     openReservationDialog() {
+      this.editedReservation = null;
+      this.dialog = true;
+    },
+    openEditReservationDialog(reservation) {
+      this.editedReservation = reservation;
+      // Copy reservation data to newReservation for editing
+      const [hour, minute] = reservation.time.split(':');
+      this.newReservation = { 
+        ...reservation,
+        hour,
+        minute,
+      };
       this.dialog = true;
     },
     closeReservationDialog() {
       this.dialog = false;
-      this.$refs.reservationForm.resetValidation();
-      this.newReservation = { name: '', phone: '', hour: '12', minute: '00', table: null, adults: 2, children: 0 };
+      this.$nextTick(() => {
+        this.$refs.reservationForm.resetValidation();
+        this.newReservation = { id: null, name: '', phone: '', hour: '12', minute: '00', table: null, adults: 2, children: 0 };
+        this.editedReservation = null;
+      });
+    },
+    openDeleteReservationDialog(reservation) {
+      this.reservationToDelete = reservation;
+      this.deleteReservationConfirmDialog = true;
+    },
+    cancelDeleteReservation() {
+      this.deleteReservationConfirmDialog = false;
+      this.reservationToDelete = null;
+    },
+    executeDeleteReservation() {
+      const index = this.reservations.findIndex(r => r.id === this.reservationToDelete.id);
+      if (index !== -1) {
+        this.reservations.splice(index, 1);
+      }
+      this.cancelDeleteReservation();
     },
     previousDay() {
       this.date.setDate(this.date.getDate() - 1);
@@ -370,18 +467,28 @@ export default {
     },
     async saveReservation() {
       const { valid } = await this.$refs.reservationForm.validate();
-      if (valid) {
-        const reservationToSave = {
-          ...this.newReservation,
-          time: `${this.newReservation.hour}:${this.newReservation.minute}`,
-          date: this.formattedDate,
-        };
-        delete reservationToSave.hour;
-        delete reservationToSave.minute;
+      if (!valid) return;
 
-        this.reservations.push(reservationToSave);
-        this.closeReservationDialog();
+      const reservationData = {
+        ...this.newReservation,
+        time: `${this.newReservation.hour}:${this.newReservation.minute}`,
+        date: this.formattedDate,
+      };
+      delete reservationData.hour;
+      delete reservationData.minute;
+
+      if (this.editedReservation) {
+        // Update existing reservation
+        const index = this.reservations.findIndex(r => r.id === this.editedReservation.id);
+        if (index !== -1) {
+          this.reservations.splice(index, 1, reservationData);
+        }
+      } else {
+        // Add new reservation
+        reservationData.id = this.nextReservationId++;
+        this.reservations.push(reservationData);
       }
+      this.closeReservationDialog();
     },
     handleUpdateTablePosition({ tableId, x, y }) {
       const table = this.tables.find(t => t.id === tableId);
