@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid>
+  <v-container>
     <!-- Floor Selection -->
     <v-row>
       <v-col>
@@ -94,9 +94,11 @@
         <seat-map-grid
           :tables="tables"
           :draggable="editMode"
+          :reservations="filteredReservations"
           @update-table-position="handleUpdateTablePosition"
           @edit-table="openEditTableDialog"
           @delete-table="handleDeleteTable"
+          @show-reservation-details="showReservationDetails"
         ></seat-map-grid>
       </v-col>
 
@@ -183,6 +185,32 @@
           <v-spacer></v-spacer>
           <v-btn text @click="closeReservationDialog">取消</v-btn>
           <v-btn color="primary" @click="saveReservation">儲存</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    
+    <!-- Reservation Details Dialog -->
+    <v-dialog v-model="reservationDetailsDialog" max-width="500px">
+      <v-card>
+        <v-card-title class="d-flex justify-space-between align-center">
+          <span class="headline">訂位詳細資訊</span>
+          <v-btn icon @click="closeReservationDetailsDialog"><v-icon>mdi-close</v-icon></v-btn>
+        </v-card-title>
+        <v-card-text>
+          <div v-if="selectedReservationDetails.length > 0">
+            <div v-for="(reservation, index) in selectedReservationDetails" :key="reservation.id">
+              <v-divider v-if="index > 0" class="my-4"></v-divider>
+              <p><strong>姓名:</strong> {{ reservation.name }}</p>
+              <p><strong>電話:</strong> {{ reservation.phone }}</p>
+              <p><strong>時間:</strong> {{ reservation.time }}</p>
+              <p><strong>桌號:</strong> {{ reservation.table }}</p>
+              <p><strong>人數:</strong> {{ reservation.adults }} 大 {{ reservation.children }} 小</p>
+            </div>
+          </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text @click="closeReservationDetailsDialog">關閉</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -312,6 +340,8 @@ export default {
       deleteReservationConfirmDialog: false,
       minFloorWarningDialog: false,
       duplicateNameWarningDialog: false,
+      reservationDetailsDialog: false,
+      selectedReservationDetails: [],
       date: new Date(),
       reservations: [],
       editMode: false,
@@ -322,24 +352,22 @@ export default {
           id: '1F',
           name: '一樓',
           tables: [
-            { id: 1, name: 'A1', x: 10, y: 10 },
-            { id: 2, name: 'A2', x: 110, y: 10 },
-            { id: 3, name: 'A3', x: 210, y: 10 },
-            { id: 4, name: 'A4', x: 10, y: 110 },
-            { id: 5, name: 'A5', x: 110, y: 110 },
-            { id: 6, name: 'B1', x: 10, y: 210 },
-            { id: 7, name: 'B2', x: 110, y: 210 },
-            { id: 8, name: 'B3', x: 210, y: 210 },
-            { id: 9, name: 'B4', x: 10, y: 310 },
-            { id: 10, name: 'B5', x: 110, y: 310 },
+            { id: 1, name: 'A1', x: 20, y: 20 },
+            { id: 2, name: 'A2', x: 220, y: 20 },
+            { id: 3, name: 'A3', x: 420, y: 20 },
+            { id: 4, name: 'A4', x: 20, y: 220 },
+            { id: 5, name: 'A5', x: 220, y: 220 },
+            { id: 6, name: 'B1', x: 20, y: 420 },
+            { id: 7, name: 'B2', x: 220, y: 420 },
+            { id: 8, name: 'B3', x: 420, y: 420 },
           ],
         },
         {
           id: '2F',
           name: '二樓',
           tables: [
-            { id: 101, name: 'C1', x: 10, y: 10 },
-            { id: 102, name: 'C2', x: 110, y: 10 },
+            { id: 101, name: 'C1', x: 20, y: 20 },
+            { id: 102, name: 'C2', x: 220, y: 20 },
           ],
         },
       ],
@@ -361,7 +389,7 @@ export default {
       },
       editedReservation: null,
       reservationToDelete: null,
-      gridSize: 100, // 90 (table width) + 10 (gap)
+      gridSize: 200, // 140 (table width) + 60 (gap)
       nextTableId: 103, // Keep track of the next available table ID
       nextFloorId: 3, // Keep track of the next available floor ID
       nextReservationId: 1, // Keep track of the next available reservation ID
@@ -419,6 +447,14 @@ export default {
     }
   },
   methods: {
+    showReservationDetails(reservations) {
+      this.selectedReservationDetails = reservations;
+      this.reservationDetailsDialog = true;
+    },
+    closeReservationDetailsDialog() {
+      this.reservationDetailsDialog = false;
+      this.selectedReservationDetails = [];
+    },
     openReservationDialog() {
       this.editedReservation = null;
       this.dialog = true;

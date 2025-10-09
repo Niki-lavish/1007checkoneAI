@@ -10,21 +10,46 @@
         v-for="table in tables"
         :key="table.id"
         class="table-card"
+        :class="{ 'reserved': getReservationsForTable(table).length > 0 }"
         :style="{ top: table.y + 'px', left: table.x + 'px' }"
         :draggable="draggable"
         @dragstart="onDragStart($event, table)"
+        variant="outlined"
       >
-        <v-card-text class="text-center">
-          <div class="font-weight-bold">{{ table.name }}</div>
-        </v-card-text>
-        <v-card-actions v-if="draggable" class="justify-center">
-          <v-btn icon size="small" @click.stop="$emit('edit-table', table)">
-            <v-icon>mdi-pencil</v-icon>
-          </v-btn>
-          <v-btn icon size="small" @click.stop="$emit('delete-table', table.id)">
-            <v-icon>mdi-delete</v-icon>
-          </v-btn>
-        </v-card-actions>
+        <!-- Table Header -->
+        <div class="table-header d-flex justify-space-between align-center pa-2">
+          <span class="font-weight-bold text-h6">{{ table.name }}</span>
+          <div>
+            <v-btn v-if="draggable" icon size="x-small" variant="text" @click.stop="$emit('edit-table', table)">
+              <v-icon>mdi-pencil-outline</v-icon>
+            </v-btn>
+            <v-btn v-if="draggable" icon size="x-small" variant="text" @click.stop="$emit('delete-table', table.id)">
+              <v-icon>mdi-trash-can-outline</v-icon>
+            </v-btn>
+            <v-btn 
+              v-if="!draggable && getReservationsForTable(table).length > 0" 
+              icon 
+              size="x-small" 
+              variant="text" 
+              @click.stop="$emit('show-reservation-details', getReservationsForTable(table))"
+            >
+              <v-icon>mdi-dots-vertical</v-icon>
+            </v-btn>
+          </div>
+        </div>
+
+        <!-- Reservations -->
+        <div v-if="!draggable && getReservationsForTable(table).length > 0" class="reservation-list pb-1">
+          <div
+            v-for="reservation in getReservationsForTable(table)"
+            :key="reservation.id"
+            class="reservation-item d-flex justify-space-between align-center px-3 py-1 mx-2 mb-2 text-body-1"
+          >
+            <span>{{ reservation.time }}</span>
+            <span>{{ reservation.adults + reservation.children }}人</span>
+          </div>
+        </div>
+
       </v-card>
     </v-card-text>
   </v-card>
@@ -41,8 +66,12 @@ export default {
       type: Boolean,
       default: false,
     },
+    reservations: {
+      type: Array,
+      default: () => [],
+    },
   },
-  emits: ['update-table-position', 'edit-table', 'delete-table'],
+  emits: ['update-table-position', 'edit-table', 'delete-table', 'show-reservation-details'],
   data() {
     return {
       draggedTable: null,
@@ -51,6 +80,12 @@ export default {
     };
   },
   methods: {
+    getReservationsForTable(table) {
+      if (!this.reservations) return [];
+      return this.reservations
+        .filter(r => r.table === table.name)
+        .sort((a, b) => a.time.localeCompare(b.time));
+    },
     onDragStart(event, table) {
       if (!this.draggable) {
         event.preventDefault();
@@ -68,7 +103,6 @@ export default {
       const newX = event.clientX - gridRect.left - this.offsetX;
       const newY = event.clientY - gridRect.top - this.offsetY;
 
-      // Emit an event to the parent component to update the table's position
       this.$emit('update-table-position', {
         tableId: this.draggedTable.id,
         x: newX,
@@ -84,22 +118,28 @@ export default {
 <style scoped>
 .seat-map-grid {
   position: relative;
-  height: 600px; /* Adjust as needed */
+  height: 600px;
   border: 1px solid #ccc;
   background-color: #f9f9f9;
 }
 .table-card {
   position: absolute;
   cursor: move;
-  width: 90px;
-  height: 90px;
+  width: 140px; 
+  min-height: 50px;
   display: flex;
-  flex-direction: column; /* Arrange items vertically */
-  align-items: center;
-  justify-content: center;
-  user-select: none; /* Prevent text selection while dragging */
+  flex-direction: column;
+  user-select: none;
+  border-radius: 8px;
+  background-color: white;
 }
-.v-card-actions {
-  padding: 0;
+.table-card.reserved {
+  background-color: #e8f5e9;
+  border: 1px solid #a5d6a7;
+}
+.reservation-item {
+  background-color: #ffffff;
+  border-radius: 4px;
+  font-size: 0.875rem;
 }
 </style>
